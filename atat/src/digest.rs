@@ -202,10 +202,13 @@ pub mod parser {
         alt((
             // Matches the equivalent of regex: "\r\n\+CME ERROR:\s*(\d+)\r\n"
             map(numeric_error("\r\n+CME ERROR:"), |(error_code, len)| {
+                let cme_error = CmeError::from(error_code);
+                match cme_error {
+                    CmeError::Unknown if error_code != 100 => error!("Unknown CME error: {error_code}"),
+                    _ => ()
+                }
                 (
-                    DigestResult::Response(Err(InternalError::CmeError(CmeError::from(
-                        error_code,
-                    )))),
+                    DigestResult::Response(Err(InternalError::CmeError(cme_error))),
                     len,
                 )
             }),
