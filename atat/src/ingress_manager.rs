@@ -144,7 +144,16 @@ where
                         }
                     }
                     Err(e) => {
-                        error!("Received error response {:?}", e);
+                        match e {
+                            InternalError::Error => {
+                                static mut GENERIC_ERROR_FLAG: bool = false;
+                                if !unsafe { GENERIC_ERROR_FLAG } {
+                                    error!("Received generic error response, not repeating");
+                                    unsafe { GENERIC_ERROR_FLAG = true };
+                                }
+                            },
+                            _ => error!("Received error response {:?}", e),
+                        }
                     }
                 };
 
