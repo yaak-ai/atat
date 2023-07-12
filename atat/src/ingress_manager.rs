@@ -145,11 +145,14 @@ where
                     }
                     Err(e) => {
                         match e {
-                            InternalError::Error => {
-                                static mut GENERIC_ERROR_FLAG: bool = false;
-                                if !unsafe { GENERIC_ERROR_FLAG } {
-                                    error!("Received generic error response, not repeating");
-                                    unsafe { GENERIC_ERROR_FLAG = true };
+                            InternalError::Error => unsafe {
+                                const INTERVAL: usize = 100;
+                                static mut COUNT: usize = INTERVAL;
+                                if COUNT == INTERVAL {
+                                    error!("Received generic error response, not repeating for {INTERVAL} messages");
+                                    COUNT = 0;
+                                } else {
+                                    COUNT += 1; 
                                 }
                             },
                             _ => error!("Received error response {:?}", e),
