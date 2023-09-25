@@ -125,6 +125,7 @@ where
             }
             (DigestResult::Urc(urc_line), swallowed) => {
                 if let Ok(mut grant) = self.urc_p.grant(urc_line.len()) {
+                    debug!("Received URC: `{:?}` {urc_line:02X?}", LossyStr(urc_line.as_ref()));
                     grant.copy_from_slice(urc_line);
                     grant.commit(urc_line.len());
                     Ok(swallowed)
@@ -140,24 +141,22 @@ where
                         if r.is_empty() {
                             debug!("Received OK")
                         } else {
-                            debug!("Received response: \"{:?}\"", LossyStr(r.as_ref()));
+                            debug!("Received response: `{:?}` {r:02X?}", LossyStr(r.as_ref()));
                         }
                     }
-                    Err(e) => {
-                        match e {
-                            InternalError::Error => unsafe {
-                                const INTERVAL: usize = 100;
-                                static mut COUNT: usize = INTERVAL;
-                                if COUNT == INTERVAL {
-                                    error!("Received generic error response, not repeating for {INTERVAL} messages");
-                                    COUNT = 0;
-                                } else {
-                                    COUNT += 1; 
-                                }
-                            },
-                            _ => error!("Received error response {:?}", e),
-                        }
-                    }
+                    Err(e) => match e {
+                        InternalError::Error => unsafe {
+                            const INTERVAL: usize = 100;
+                            static mut COUNT: usize = INTERVAL;
+                            if COUNT == INTERVAL {
+                                error!("Received generic error response, not repeating for {INTERVAL} messages");
+                                COUNT = 0;
+                            } else {
+                                COUNT += 1;
+                            }
+                        },
+                        _ => error!("Received error response {:?}", e),
+                    },
                 };
 
                 if Self::enqueue_encoded_header(&mut self.res_p, resp).is_ok() {

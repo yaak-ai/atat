@@ -130,14 +130,7 @@ where
             nb::block!(self.timer.wait()).ok();
             let cmd_buf = cmd.as_bytes();
 
-            if cmd_buf.len() < 50 {
-                debug!("Sending command: \"{:?}\"", LossyStr(&cmd_buf));
-            } else {
-                debug!(
-                    "Sending command with too long payload ({} bytes) to log!",
-                    cmd_buf.len(),
-                );
-            }
+            debug!("Sending command: `{:?}` {cmd_buf:02X?}", LossyStr(&cmd_buf));
 
             for c in cmd_buf {
                 block_timeout!((self.timer, self.config.tx_timeout) => {self.tx.write(c)}.map_err(|_e| Error::Write))?;

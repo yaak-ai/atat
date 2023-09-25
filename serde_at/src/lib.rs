@@ -33,6 +33,5 @@ fn uninit_array<T, const N: usize>() -> [MaybeUninit<T>; N] {
 
 // TODO: Use `MaybeUninit::slice_assume_init_ref` once it has stabilized?
 unsafe fn slice_assume_init_ref<T>(slice: &[MaybeUninit<T>]) -> &[T] {
-    // SAFETY: See `MaybeUninit::slice_assume_init_ref`.
-    unsafe { &*(slice as *const [MaybeUninit<T>] as *const [T]) }
+    &*(slice as *const [MaybeUninit<T>] as *const [T])
 }
