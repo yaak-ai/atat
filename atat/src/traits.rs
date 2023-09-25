@@ -114,8 +114,9 @@ pub trait AtatClient {
             }
 
             match self.send(cmd) {
-                e @ Err(nb::Error::Other(Error::Timeout | Error::Parse)) => {
-                    error = e;
+                Err(e @ nb::Error::Other(Error::Timeout | Error::Parse)) => {
+                    error!("Error sending: `{e:?}`");
+                    error = Err(e);
                 }
                 r => return r,
             }
